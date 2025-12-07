@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest:*)",
+      "Bash(dir)",
+      "Bash(npm install)",
+      "Bash(npm run dev)",
+      "Bash(timeout:*)",
+      "Bash(node:*)",
+      "Bash(test -f .env.local)",
+      "mcp__ide__getDiagnostics",
+      "Bash(taskkill:*)",
+      "Bash(test:*)",
+      "Bash(if exist .next rmdir /s /q .next)",
+      "Bash(rm:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(cat:*)",
+      "Bash(npm run build:*)",
+      "Bash(cmd /c \"taskkill /F /PID 10488\")",
+      "Bash(npx supabase db execute:*)",
+      "Bash(dir:*)",
+      "Bash(cmd /c \"taskkill /F /PID 48912\")",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

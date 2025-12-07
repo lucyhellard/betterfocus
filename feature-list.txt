@@ -1,0 +1,85 @@
+
+
+
+publish online
+fix /notes formatting bar and give slight background colour and maybe use icons instead of words
+
+
+Habits admin - fix buttons so consistent icons - need to find an archive option
+
+
+
+--- SMALL FEATURES ---
+When its a new week (so Monday), all open tasks from week before should be added to backlog for that new week. All tasks that were open in previous week, should appear at top of backlog
+For other open tasks, move them to top of backlog in new week  
+
+
+--- BIG FEATURES ---
+
+Stealth mode/Hide mode?
+Integrates with calendar? 
+
+
+---LOW IMPORTANCE---
+Habits admin - Able to reset individual habits - so delete just that habit's entries
+Image urls in notes are public (if private then need expiry - so should not store overly sensitive info)
+
+
+
+============== COMPLETED ============================
+---DASHBOARD DONE---
+Expand/Collapse all sections
+
+---HABITS DONE---
+Update 'Habits' heading to 'Daily Habits' and remove 'Daily habits - Week 49' heading
+Update 'Habits weekly streak' to be H2
+For weekly streak, change white text in coloured boxes to be consistent with daily streak 
+Update 'Status colors' to 'Key'
+Add Habits to left navigation. When clicking on habits nav, displays page with listing of all habits. All habits have edit, delete, archive option. If deleted, data for that habit is removed. If archived, data is kept however not shown in dashboard.
+Habit reordering is little slow and clunky 
+when I click a yellow habit.. it goes to white... should go to green - check order
+
+---TASKS DONE---
+Change date to 'Fri 5 Dec'
+If tasks are completed, should put them at bottom of list under date completed 
+For the task icons, I want better visuals. For pending, it should be a white square with grey border (with slightly rounded corner - similar to habits). 
+If in progress, it shows white square with half filled in orange from corner to opposite corner. If completed then green square. 
+Update heading 'Week's Tasks' to 'This Week's Tasks'
+For all tasks, show how many days they have been 'open' after task name in a light grey colour e.g. Complete proposal (1d). If created today it would be 1d.
+For those that have been on backlog for > 14 days, turn number of days (21d) to red text. For those > 30 days, add warning symbol
+Add backlog tasks (same as weekly tasks but these are not as important) and do not need to be grouped by date. 
+For all tasks, add option to tag as priority. If priority task, they are given a red border instead of the grey and move to top of list under 'Priority' H3 heading (similar to Fri 5-Dec). Priority items are always at top. Once completed/cancelled, then they are treated in same way as normal task.
+For backlog tasks, if task completed, cancelled - move to completed cancelled (same as other tasks).
+Move all open backlog tasks (pending, in progress, migrated) to new week's backlog - does move them - constantly on show
+When click on task name, it opens task view. If click on task name again it should close task view
+bug - days open dont seem to move off 1d
+backlog - when expand title to view, clicking title does not then close (like those in week's list)
+When its the start of the new week (which is Monday), I want all open tasks (pending/in progress), 
+/move backlog above completed/cancelled
+
+For buttons when opening a task view, change to icons
+ - Save = disk
+ - Priority = flag
+ - Delete = rubbish bin
+ - move to backlog = down arrow
+ - move to this week = up arrow
+ - cancel - no longer required as clicking task name closes
+
+Buttons - outline format - using https://heroicons.com/
+move to backlog - arrow-down-on-square
+move to this week = arrow-up-on-square
+priority - flag
+delete - trash
+save - arrow-turn-down-left 
+
+---PROJECTS/GOALS DONE---
+For projects and goals, if we add a task, the task needs to appear in the week's tasks list
+in /projects-goals-admin - tag to be moved to right of name (not right justified) and then need to be able to edit the project or goal so I can update name, update tag name and update tag colour. Use heroicons pencil square outline icon for edit option
+bug - notes in projects are displaying to the right - removed
+
+---NOTES---
+/notes - when create new note - should be able to delete from that screen rather than save and then delete
+
+
+
+
