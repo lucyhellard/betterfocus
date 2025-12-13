@@ -6,6 +6,9 @@ import { AuthProvider } from "@/lib/AuthContext";
 export const metadata: Metadata = {
   title: "BetterFocus - Habit & Task Tracker",
   description: "Track your habits, tasks, and projects with ease",
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({

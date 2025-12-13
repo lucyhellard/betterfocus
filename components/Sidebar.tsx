@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
+import Image from 'next/image';
 
 export default function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -20,8 +21,22 @@ export default function Sidebar() {
       >
         {/* Header */}
         <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          {isExpanded && (
-            <h1 className="text-xl font-bold text-primary-black">BetterFocus</h1>
+          {isExpanded ? (
+            <Image
+              src="/logo.png"
+              alt="BetterFocus"
+              width={150}
+              height={40}
+              className="h-10 w-auto"
+            />
+          ) : (
+            <Image
+              src="/logo.png"
+              alt="BetterFocus"
+              width={40}
+              height={40}
+              className="h-10 w-10 object-contain"
+            />
           )}
           <button
             onClick={() => setIsExpanded(!isExpanded)}

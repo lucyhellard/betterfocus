@@ -1,6 +1,0 @@
---- start server ---
-npm run dev
-
--- to stop server ---
-Control-C
-
