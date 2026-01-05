@@ -24,6 +24,7 @@ type Task = {
   title: string;
   status: TaskStatus;
   date: string;
+  dueDate?: string;
   notes?: string;
   projectId?: string;
   projectTag?: string;
@@ -121,6 +122,8 @@ export default function TasksColumn() {
   const [newBacklogTaskTitle, setNewBacklogTaskTitle] = useState('');
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState('');
+  const [editingDueDate, setEditingDueDate] = useState<string | null>(null);
+  const [editDueDateValue, setEditDueDateValue] = useState('');
   const [loading, setLoading] = useState(true);
   const [isWeekTasksExpanded, setIsWeekTasksExpanded] = useState(true);
   const [isCompletedExpanded, setIsCompletedExpanded] = useState(true);
@@ -197,6 +200,7 @@ export default function TasksColumn() {
         title: task.title,
         status: task.status as TaskStatus,
         date: task.date,
+        dueDate: task.due_date || task.date,
         notes: task.notes || undefined,
         projectId: task.project_id || undefined,
         projectTag: task.projects?.tag || undefined,
@@ -226,6 +230,7 @@ export default function TasksColumn() {
         title: task.title,
         status: task.status as TaskStatus,
         date: task.date,
+        dueDate: task.due_date || task.date,
         notes: task.notes || undefined,
         projectId: task.project_id || undefined,
         projectTag: task.projects?.tag || undefined,
@@ -313,6 +318,7 @@ export default function TasksColumn() {
           title: newTaskTitle,
           status: 'pending',
           date: today,
+          due_date: today,
           user_id: userId,
         })
         .select()
@@ -326,6 +332,7 @@ export default function TasksColumn() {
           title: data.title,
           status: data.status as TaskStatus,
           date: data.date,
+          dueDate: data.due_date || data.date,
           notes: data.notes || undefined,
           projectId: data.project_id || undefined,
           createdAt: data.created_at || undefined,
@@ -356,6 +363,7 @@ export default function TasksColumn() {
           title: newBacklogTaskTitle,
           status: 'pending',
           date: today,
+          due_date: null,
           is_backlog: true,
           user_id: userId,
         })
@@ -374,6 +382,7 @@ export default function TasksColumn() {
           title: data.title,
           status: data.status as TaskStatus,
           date: data.date,
+          dueDate: data.due_date || undefined,
           notes: data.notes || undefined,
           projectId: data.project_id || undefined,
           createdAt: data.created_at || undefined,
@@ -467,13 +476,13 @@ export default function TasksColumn() {
 
     // Optimistically update UI
     setBacklogTasks((prev) => prev.filter((t) => t.id !== taskId));
-    setTasks((prev) => [...prev, { ...task, isBacklog: false, date: today }]);
+    setTasks((prev) => [...prev, { ...task, isBacklog: false, date: today, dueDate: today }]);
     setEditingTask(null);
 
     try {
       await supabase
         .from('tasks')
-        .update({ is_backlog: false, date: today })
+        .update({ is_backlog: false, date: today, due_date: today })
         .eq('id', taskId);
     } catch (error) {
       console.error('Error moving task to week:', error);
@@ -542,6 +551,33 @@ export default function TasksColumn() {
     }
   };
 
+  const updateDueDate = async (taskId: string, newDueDate: string) => {
+    // Optimistically update UI for both lists
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId ? { ...task, dueDate: newDueDate } : task
+      )
+    );
+    setBacklogTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId ? { ...task, dueDate: newDueDate } : task
+      )
+    );
+
+    setEditingDueDate(null);
+    setEditDueDateValue('');
+
+    try {
+      await supabase
+        .from('tasks')
+        .update({ due_date: newDueDate })
+        .eq('id', taskId);
+    } catch (error) {
+      console.error('Error updating due date:', error);
+      fetchTasks(); // Revert on error
+    }
+  };
+
   const deleteTask = async (taskId: string) => {
     // Optimistically update UI for both lists
     setTasks((prev) => prev.filter((task) => task.id !== taskId));
@@ -588,11 +624,12 @@ export default function TasksColumn() {
       if (task.isPriority && !isCompletedOrCancelled) {
         priorityTasks.push(task);
       } else {
-        // Group by original date in the active tasks section (includes completed/cancelled tasks from today)
-        if (!tasksByDate[task.date]) {
-          tasksByDate[task.date] = [];
+        // Group by due_date in the active tasks section (includes completed/cancelled tasks from today)
+        const groupDate = task.dueDate || task.date;
+        if (!tasksByDate[groupDate]) {
+          tasksByDate[groupDate] = [];
         }
-        tasksByDate[task.date].push(task);
+        tasksByDate[groupDate].push(task);
       }
     }
   });
@@ -729,6 +766,63 @@ export default function TasksColumn() {
                             )}
                           </button>
 
+                          {/* Due Date Display */}
+                          {task.dueDate && (
+                            <div className="mt-1">
+                              {editingDueDate === task.id ? (
+                                <div className="flex gap-2 items-center">
+                                  <input
+                                    type="date"
+                                    value={editDueDateValue}
+                                    onChange={(e) => setEditDueDateValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        updateDueDate(task.id, editDueDateValue);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingDueDate(null);
+                                        setEditDueDateValue('');
+                                      }
+                                    }}
+                                    className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => updateDueDate(task.id, editDueDateValue)}
+                                    className="text-xs px-2 py-1 bg-primary-yellow hover:bg-primary-yellow-dark rounded"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingDueDate(null);
+                                      setEditDueDateValue('');
+                                    }}
+                                    className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingDueDate(task.id);
+                                    setEditDueDateValue(task.dueDate);
+                                  }}
+                                  className="text-xs text-gray-600 hover:text-gray-800 hover:underline"
+                                >
+                                  Due: {(() => {
+                                    const d = new Date(task.dueDate + 'T00:00:00');
+                                    const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+                                    const day = d.getDate();
+                                    const month = d.toLocaleDateString('en-US', { month: 'short' });
+                                    return `${weekday} ${day}-${month}`;
+                                  })()}
+                                </button>
+                              )}
+                            </div>
+                          )}
+
                           {/* Detailed Notes Link */}
                           <Link
                             href={`/notes?taskId=${task.id}&taskTitle=${encodeURIComponent(task.title)}${task.projectTag ? `&projectTag=${encodeURIComponent(task.projectTag)}` : ''}`}
@@ -839,6 +933,63 @@ export default function TasksColumn() {
                               <p className="text-sm text-gray-500 mt-1">{task.notes}</p>
                             )}
                           </button>
+
+                          {/* Due Date Display */}
+                          {task.dueDate && (
+                            <div className="mt-1">
+                              {editingDueDate === task.id ? (
+                                <div className="flex gap-2 items-center">
+                                  <input
+                                    type="date"
+                                    value={editDueDateValue}
+                                    onChange={(e) => setEditDueDateValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        updateDueDate(task.id, editDueDateValue);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingDueDate(null);
+                                        setEditDueDateValue('');
+                                      }
+                                    }}
+                                    className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                                    autoFocus
+                                  />
+                                  <button
+                                    onClick={() => updateDueDate(task.id, editDueDateValue)}
+                                    className="text-xs px-2 py-1 bg-primary-yellow hover:bg-primary-yellow-dark rounded"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingDueDate(null);
+                                      setEditDueDateValue('');
+                                    }}
+                                    className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingDueDate(task.id);
+                                    setEditDueDateValue(task.dueDate);
+                                  }}
+                                  className="text-xs text-gray-600 hover:text-gray-800 hover:underline"
+                                >
+                                  Due: {(() => {
+                                    const d = new Date(task.dueDate + 'T00:00:00');
+                                    const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+                                    const day = d.getDate();
+                                    const month = d.toLocaleDateString('en-US', { month: 'short' });
+                                    return `${weekday} ${day}-${month}`;
+                                  })()}
+                                </button>
+                              )}
+                            </div>
+                          )}
 
                           {/* Detailed Notes Link */}
                           <Link
