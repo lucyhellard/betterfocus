@@ -807,7 +807,7 @@ export default function TasksColumn() {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setEditingDueDate(task.id);
-                                    setEditDueDateValue(task.dueDate);
+                                    setEditDueDateValue(task.dueDate || '');
                                   }}
                                   className="text-xs text-gray-600 hover:text-gray-800 hover:underline"
                                 >
@@ -975,7 +975,7 @@ export default function TasksColumn() {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setEditingDueDate(task.id);
-                                    setEditDueDateValue(task.dueDate);
+                                    setEditDueDateValue(task.dueDate || '');
                                   }}
                                   className="text-xs text-gray-600 hover:text-gray-800 hover:underline"
                                 >
