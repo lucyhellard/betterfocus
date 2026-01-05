@@ -14,7 +14,8 @@ import {
   ArrowTurnDownLeftIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  CalendarIcon
 } from '@heroicons/react/24/outline';
 
 type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
@@ -33,6 +34,9 @@ type Task = {
   createdAt?: string;
   isBacklog?: boolean;
   isPriority?: boolean;
+  isEvent?: boolean;
+  eventTime?: string;
+  eventDate?: string;
 };
 
 const TaskIcon = ({ status }: { status: TaskStatus }) => {
@@ -120,6 +124,9 @@ export default function TasksColumn() {
   const [showAddBacklogTask, setShowAddBacklogTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newBacklogTaskTitle, setNewBacklogTaskTitle] = useState('');
+  const [isEvent, setIsEvent] = useState(false);
+  const [eventTime, setEventTime] = useState('');
+  const [eventDate, setEventDate] = useState(today);
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState('');
   const [editingDueDate, setEditingDueDate] = useState<string | null>(null);
@@ -209,6 +216,9 @@ export default function TasksColumn() {
         createdAt: task.created_at || undefined,
         isBacklog: task.is_backlog || false,
         isPriority: task.is_priority || false,
+        isEvent: task.is_event || false,
+        eventTime: task.event_time || undefined,
+        eventDate: task.event_date || undefined,
       }));
 
       setTasks(formattedWeekTasks);
@@ -239,6 +249,9 @@ export default function TasksColumn() {
         createdAt: task.created_at || undefined,
         isBacklog: true,
         isPriority: task.is_priority || false,
+        isEvent: task.is_event || false,
+        eventTime: task.event_time || undefined,
+        eventDate: task.event_date || undefined,
       }));
 
       setBacklogTasks(formattedBacklogTasks);
@@ -312,15 +325,23 @@ export default function TasksColumn() {
         return;
       }
 
+      const taskData: any = {
+        title: newTaskTitle,
+        status: 'pending',
+        date: today,
+        due_date: isEvent ? eventDate : today,
+        user_id: userId,
+        is_event: isEvent,
+      };
+
+      if (isEvent) {
+        taskData.event_time = eventTime || null;
+        taskData.event_date = eventDate;
+      }
+
       const { data, error } = await supabase
         .from('tasks')
-        .insert({
-          title: newTaskTitle,
-          status: 'pending',
-          date: today,
-          due_date: today,
-          user_id: userId,
-        })
+        .insert(taskData)
         .select()
         .single();
 
@@ -336,11 +357,17 @@ export default function TasksColumn() {
           notes: data.notes || undefined,
           projectId: data.project_id || undefined,
           createdAt: data.created_at || undefined,
+          isEvent: data.is_event || false,
+          eventTime: data.event_time || undefined,
+          eventDate: data.event_date || undefined,
         };
         setTasks([...tasks, newTask]);
       }
 
       setNewTaskTitle('');
+      setIsEvent(false);
+      setEventTime('');
+      setEventDate(today);
       setShowAddTask(false);
     } catch (error) {
       console.error('Error adding task:', error);
@@ -687,15 +714,68 @@ export default function TasksColumn() {
       {/* Add Task Form */}
       {showAddTask && (
         <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+          {/* Task/Event Toggle */}
+          <div className="flex gap-2 mb-3">
+            <button
+              onClick={() => setIsEvent(false)}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                !isEvent
+                  ? 'bg-primary-yellow text-black'
+                  : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Task
+            </button>
+            <button
+              onClick={() => setIsEvent(true)}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                isEvent
+                  ? 'bg-primary-yellow text-black'
+                  : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Event
+            </button>
+          </div>
+
           <input
             type="text"
-            placeholder="Task title"
+            placeholder={isEvent ? "Event title" : "Task title"}
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && addTask()}
+            onKeyPress={(e) => e.key === 'Enter' && !isEvent && addTask()}
             className="w-full px-3 py-2 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-yellow"
             autoFocus
           />
+
+          {/* Event-specific fields */}
+          {isEvent && (
+            <div className="space-y-2 mb-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Event Date
+                </label>
+                <input
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Event Time (optional)
+                </label>
+                <input
+                  type="time"
+                  value={eventTime}
+                  onChange={(e) => setEventTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <button
               onClick={addTask}
@@ -704,7 +784,13 @@ export default function TasksColumn() {
               Add
             </button>
             <button
-              onClick={() => setShowAddTask(false)}
+              onClick={() => {
+                setShowAddTask(false);
+                setIsEvent(false);
+                setEventTime('');
+                setEventDate(today);
+                setNewTaskTitle('');
+              }}
               className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
             >
               Cancel
@@ -736,7 +822,11 @@ export default function TasksColumn() {
                           className="hover:opacity-70 transition-opacity flex-shrink-0 mt-0.5"
                           title={task.status}
                         >
-                          <TaskIcon status={task.status} />
+                          {task.isEvent ? (
+                            <CalendarIcon className="w-6 h-6 text-blue-600" />
+                          ) : (
+                            <TaskIcon status={task.status} />
+                          )}
                         </button>
                         <div className="flex-1 min-w-0">
                           <button
@@ -753,7 +843,7 @@ export default function TasksColumn() {
                           >
                             <p className={`text-sm font-medium ${task.status === 'completed' ? 'line-through text-gray-400' : ''}`}>
                               {task.title}{' '}
-                              <DaysOpenBadge createdAt={task.createdAt} />
+                              {!task.isEvent && <DaysOpenBadge createdAt={task.createdAt} />}
                               {task.projectTag && task.projectTagColor && (
                                 <>
                                   {' '}
@@ -761,6 +851,19 @@ export default function TasksColumn() {
                                 </>
                               )}
                             </p>
+                            {/* Event Details */}
+                            {task.isEvent && task.eventDate && (
+                              <p className="text-xs text-blue-600 mt-1">
+                                {(() => {
+                                  const d = new Date(task.eventDate + 'T00:00:00');
+                                  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+                                  const day = d.getDate();
+                                  const month = d.toLocaleDateString('en-US', { month: 'short' });
+                                  return `${weekday} ${day}-${month}`;
+                                })()}
+                                {task.eventTime && ` at ${task.eventTime.substring(0, 5)}`}
+                              </p>
+                            )}
                             {task.notes && !editingTask && (
                               <p className="text-sm text-gray-500 mt-1">{task.notes}</p>
                             )}
@@ -904,7 +1007,11 @@ export default function TasksColumn() {
                           className="hover:opacity-70 transition-opacity flex-shrink-0 mt-0.5"
                           title={task.status}
                         >
-                          <TaskIcon status={task.status} />
+                          {task.isEvent ? (
+                            <CalendarIcon className="w-6 h-6 text-blue-600" />
+                          ) : (
+                            <TaskIcon status={task.status} />
+                          )}
                         </button>
                         <div className="flex-1 min-w-0">
                           <button
@@ -921,7 +1028,7 @@ export default function TasksColumn() {
                           >
                             <p className={`text-sm font-medium ${task.status === 'completed' ? 'line-through text-gray-400' : ''}`}>
                               {task.title}{' '}
-                              <DaysOpenBadge createdAt={task.createdAt} />
+                              {!task.isEvent && <DaysOpenBadge createdAt={task.createdAt} />}
                               {task.projectTag && task.projectTagColor && (
                                 <>
                                   {' '}
@@ -929,6 +1036,19 @@ export default function TasksColumn() {
                                 </>
                               )}
                             </p>
+                            {/* Event Details */}
+                            {task.isEvent && task.eventDate && (
+                              <p className="text-xs text-blue-600 mt-1">
+                                {(() => {
+                                  const d = new Date(task.eventDate + 'T00:00:00');
+                                  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+                                  const day = d.getDate();
+                                  const month = d.toLocaleDateString('en-US', { month: 'short' });
+                                  return `${weekday} ${day}-${month}`;
+                                })()}
+                                {task.eventTime && ` at ${task.eventTime.substring(0, 5)}`}
+                              </p>
+                            )}
                             {task.notes && !editingTask && (
                               <p className="text-sm text-gray-500 mt-1">{task.notes}</p>
                             )}
@@ -1151,7 +1271,11 @@ export default function TasksColumn() {
                     className="hover:opacity-70 transition-opacity flex-shrink-0 mt-0.5"
                     title={task.status}
                   >
-                    <TaskIcon status={task.status} />
+                    {task.isEvent ? (
+                      <CalendarIcon className="w-6 h-6 text-blue-600" />
+                    ) : (
+                      <TaskIcon status={task.status} />
+                    )}
                   </button>
                   <div className="flex-1 min-w-0">
                     <button
@@ -1168,7 +1292,7 @@ export default function TasksColumn() {
                     >
                       <p className={`text-sm font-medium ${task.status === 'completed' ? 'line-through text-gray-400' : ''}`}>
                         {task.title}{' '}
-                        <DaysOpenBadge createdAt={task.createdAt} />
+                        {!task.isEvent && <DaysOpenBadge createdAt={task.createdAt} />}
                         {task.projectTag && task.projectTagColor && (
                           <>
                             {' '}
@@ -1176,6 +1300,19 @@ export default function TasksColumn() {
                           </>
                         )}
                       </p>
+                      {/* Event Details */}
+                      {task.isEvent && task.eventDate && (
+                        <p className="text-xs text-blue-600 mt-1">
+                          {(() => {
+                            const d = new Date(task.eventDate + 'T00:00:00');
+                            const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+                            const day = d.getDate();
+                            const month = d.toLocaleDateString('en-US', { month: 'short' });
+                            return `${weekday} ${day}-${month}`;
+                          })()}
+                          {task.eventTime && ` at ${task.eventTime.substring(0, 5)}`}
+                        </p>
+                      )}
                       {task.notes && editingTask !== task.id && (
                         <p className="text-sm text-gray-500 mt-1">{task.notes}</p>
                       )}
@@ -1272,7 +1409,11 @@ export default function TasksColumn() {
                           className="hover:opacity-70 transition-opacity flex-shrink-0 mt-0.5"
                           title={task.status}
                         >
-                          <TaskIcon status={task.status} />
+                          {task.isEvent ? (
+                            <CalendarIcon className="w-6 h-6 text-blue-600" />
+                          ) : (
+                            <TaskIcon status={task.status} />
+                          )}
                         </button>
                         <div className="flex-1 min-w-0">
                           <button
@@ -1289,7 +1430,7 @@ export default function TasksColumn() {
                           >
                             <p className="text-sm font-medium">
                               {task.title}{' '}
-                              <DaysOpenBadge createdAt={task.createdAt} />
+                              {!task.isEvent && <DaysOpenBadge createdAt={task.createdAt} />}
                               {task.projectTag && task.projectTagColor && (
                                 <>
                                   {' '}
@@ -1297,6 +1438,19 @@ export default function TasksColumn() {
                                 </>
                               )}
                             </p>
+                            {/* Event Details */}
+                            {task.isEvent && task.eventDate && (
+                              <p className="text-xs text-blue-600 mt-1">
+                                {(() => {
+                                  const d = new Date(task.eventDate + 'T00:00:00');
+                                  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+                                  const day = d.getDate();
+                                  const month = d.toLocaleDateString('en-US', { month: 'short' });
+                                  return `${weekday} ${day}-${month}`;
+                                })()}
+                                {task.eventTime && ` at ${task.eventTime.substring(0, 5)}`}
+                              </p>
+                            )}
                             {task.notes && !editingTask && (
                               <p className="text-sm text-gray-500 mt-1">{task.notes}</p>
                             )}
