@@ -131,6 +131,9 @@ export default function TasksColumn() {
   const [editNotes, setEditNotes] = useState('');
   const [editingDueDate, setEditingDueDate] = useState<string | null>(null);
   const [editDueDateValue, setEditDueDateValue] = useState('');
+  const [editingEventDetails, setEditingEventDetails] = useState<string | null>(null);
+  const [editEventDateValue, setEditEventDateValue] = useState('');
+  const [editEventTimeValue, setEditEventTimeValue] = useState('');
   const [loading, setLoading] = useState(true);
   const [isWeekTasksExpanded, setIsWeekTasksExpanded] = useState(true);
   const [isCompletedExpanded, setIsCompletedExpanded] = useState(true);
@@ -345,7 +348,11 @@ export default function TasksColumn() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        alert(`Error adding task: ${error.message || 'Unknown error'}\n\nMake sure you've run the database migration (supabase-migration-events.sql)`);
+        throw error;
+      }
 
       if (data) {
         const newTask: Task = {
@@ -605,6 +612,37 @@ export default function TasksColumn() {
     }
   };
 
+  const updateEventDetails = async (taskId: string, newEventDate: string, newEventTime: string) => {
+    // Optimistically update UI for both lists
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId ? { ...task, eventDate: newEventDate, eventTime: newEventTime || undefined } : task
+      )
+    );
+    setBacklogTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId ? { ...task, eventDate: newEventDate, eventTime: newEventTime || undefined } : task
+      )
+    );
+
+    setEditingEventDetails(null);
+    setEditEventDateValue('');
+    setEditEventTimeValue('');
+
+    try {
+      await supabase
+        .from('tasks')
+        .update({
+          event_date: newEventDate,
+          event_time: newEventTime || null
+        })
+        .eq('id', taskId);
+    } catch (error) {
+      console.error('Error updating event details:', error);
+      fetchTasks(); // Revert on error
+    }
+  };
+
   const deleteTask = async (taskId: string) => {
     // Optimistically update UI for both lists
     setTasks((prev) => prev.filter((task) => task.id !== taskId));
@@ -852,26 +890,13 @@ export default function TasksColumn() {
                                 </>
                               )}
                             </p>
-                            {/* Event Details */}
-                            {task.isEvent && task.eventDate && (
-                              <p className="text-xs text-blue-600 mt-1">
-                                {(() => {
-                                  const d = new Date(task.eventDate + 'T00:00:00');
-                                  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
-                                  const day = d.getDate();
-                                  const month = d.toLocaleDateString('en-US', { month: 'short' });
-                                  return `${weekday} ${day}-${month}`;
-                                })()}
-                                {task.eventTime && ` at ${task.eventTime.substring(0, 5)}`}
-                              </p>
-                            )}
                             {task.notes && !editingTask && (
                               <p className="text-sm text-gray-500 mt-1">{task.notes}</p>
                             )}
                           </button>
 
                           {/* Due Date Display */}
-                          {task.dueDate && (
+                          {task.dueDate && !task.isEvent && (
                             <div className="mt-1">
                               {editingDueDate === task.id ? (
                                 <div className="flex gap-2 items-center">
@@ -922,6 +947,65 @@ export default function TasksColumn() {
                                     const month = d.toLocaleDateString('en-US', { month: 'short' });
                                     return `${weekday} ${day}-${month}`;
                                   })()}
+                                </button>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Event Details */}
+                          {task.isEvent && (
+                            <div className="mt-1">
+                              {editingEventDetails === task.id ? (
+                                <div className="flex gap-2 items-center flex-wrap">
+                                  <input
+                                    type="date"
+                                    value={editEventDateValue}
+                                    onChange={(e) => setEditEventDateValue(e.target.value)}
+                                    className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                                  />
+                                  <input
+                                    type="time"
+                                    value={editEventTimeValue}
+                                    onChange={(e) => setEditEventTimeValue(e.target.value)}
+                                    placeholder="Time (optional)"
+                                    className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                                  />
+                                  <button
+                                    onClick={() => updateEventDetails(task.id, editEventDateValue, editEventTimeValue)}
+                                    className="text-xs px-2 py-1 bg-primary-yellow hover:bg-primary-yellow-dark rounded"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingEventDetails(null);
+                                      setEditEventDateValue('');
+                                      setEditEventTimeValue('');
+                                    }}
+                                    className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingEventDetails(task.id);
+                                    setEditEventDateValue(task.eventDate || today);
+                                    setEditEventTimeValue(task.eventTime || '');
+                                  }}
+                                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                                >
+                                  {task.eventDate && (() => {
+                                    const d = new Date(task.eventDate + 'T00:00:00');
+                                    const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+                                    const day = d.getDate();
+                                    const month = d.toLocaleDateString('en-US', { month: 'short' });
+                                    return `${weekday} ${day}-${month}`;
+                                  })()}
+                                  {task.eventTime && ` at ${task.eventTime.substring(0, 5)}`}
+                                  {!task.eventDate && 'Set event date/time'}
                                 </button>
                               )}
                             </div>
@@ -1037,26 +1121,13 @@ export default function TasksColumn() {
                                 </>
                               )}
                             </p>
-                            {/* Event Details */}
-                            {task.isEvent && task.eventDate && (
-                              <p className="text-xs text-blue-600 mt-1">
-                                {(() => {
-                                  const d = new Date(task.eventDate + 'T00:00:00');
-                                  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
-                                  const day = d.getDate();
-                                  const month = d.toLocaleDateString('en-US', { month: 'short' });
-                                  return `${weekday} ${day}-${month}`;
-                                })()}
-                                {task.eventTime && ` at ${task.eventTime.substring(0, 5)}`}
-                              </p>
-                            )}
                             {task.notes && !editingTask && (
                               <p className="text-sm text-gray-500 mt-1">{task.notes}</p>
                             )}
                           </button>
 
                           {/* Due Date Display */}
-                          {task.dueDate && (
+                          {task.dueDate && !task.isEvent && (
                             <div className="mt-1">
                               {editingDueDate === task.id ? (
                                 <div className="flex gap-2 items-center">
@@ -1107,6 +1178,65 @@ export default function TasksColumn() {
                                     const month = d.toLocaleDateString('en-US', { month: 'short' });
                                     return `${weekday} ${day}-${month}`;
                                   })()}
+                                </button>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Event Details */}
+                          {task.isEvent && (
+                            <div className="mt-1">
+                              {editingEventDetails === task.id ? (
+                                <div className="flex gap-2 items-center flex-wrap">
+                                  <input
+                                    type="date"
+                                    value={editEventDateValue}
+                                    onChange={(e) => setEditEventDateValue(e.target.value)}
+                                    className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                                  />
+                                  <input
+                                    type="time"
+                                    value={editEventTimeValue}
+                                    onChange={(e) => setEditEventTimeValue(e.target.value)}
+                                    placeholder="Time (optional)"
+                                    className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                                  />
+                                  <button
+                                    onClick={() => updateEventDetails(task.id, editEventDateValue, editEventTimeValue)}
+                                    className="text-xs px-2 py-1 bg-primary-yellow hover:bg-primary-yellow-dark rounded"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingEventDetails(null);
+                                      setEditEventDateValue('');
+                                      setEditEventTimeValue('');
+                                    }}
+                                    className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingEventDetails(task.id);
+                                    setEditEventDateValue(task.eventDate || today);
+                                    setEditEventTimeValue(task.eventTime || '');
+                                  }}
+                                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                                >
+                                  {task.eventDate && (() => {
+                                    const d = new Date(task.eventDate + 'T00:00:00');
+                                    const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+                                    const day = d.getDate();
+                                    const month = d.toLocaleDateString('en-US', { month: 'short' });
+                                    return `${weekday} ${day}-${month}`;
+                                  })()}
+                                  {task.eventTime && ` at ${task.eventTime.substring(0, 5)}`}
+                                  {!task.eventDate && 'Set event date/time'}
                                 </button>
                               )}
                             </div>
@@ -1301,23 +1431,69 @@ export default function TasksColumn() {
                           </>
                         )}
                       </p>
-                      {/* Event Details */}
-                      {task.isEvent && task.eventDate && (
-                        <p className="text-xs text-blue-600 mt-1">
-                          {(() => {
-                            const d = new Date(task.eventDate + 'T00:00:00');
-                            const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
-                            const day = d.getDate();
-                            const month = d.toLocaleDateString('en-US', { month: 'short' });
-                            return `${weekday} ${day}-${month}`;
-                          })()}
-                          {task.eventTime && ` at ${task.eventTime.substring(0, 5)}`}
-                        </p>
-                      )}
                       {task.notes && editingTask !== task.id && (
                         <p className="text-sm text-gray-500 mt-1">{task.notes}</p>
                       )}
                     </button>
+
+                    {/* Event Details */}
+                    {task.isEvent && (
+                      <div className="mt-1">
+                        {editingEventDetails === task.id ? (
+                          <div className="flex gap-2 items-center flex-wrap">
+                            <input
+                              type="date"
+                              value={editEventDateValue}
+                              onChange={(e) => setEditEventDateValue(e.target.value)}
+                              className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                            />
+                            <input
+                              type="time"
+                              value={editEventTimeValue}
+                              onChange={(e) => setEditEventTimeValue(e.target.value)}
+                              placeholder="Time (optional)"
+                              className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                            />
+                            <button
+                              onClick={() => updateEventDetails(task.id, editEventDateValue, editEventTimeValue)}
+                              className="text-xs px-2 py-1 bg-primary-yellow hover:bg-primary-yellow-dark rounded"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingEventDetails(null);
+                                setEditEventDateValue('');
+                                setEditEventTimeValue('');
+                              }}
+                              className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingEventDetails(task.id);
+                              setEditEventDateValue(task.eventDate || today);
+                              setEditEventTimeValue(task.eventTime || '');
+                            }}
+                            className="text-xs text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                          >
+                            {task.eventDate && (() => {
+                              const d = new Date(task.eventDate + 'T00:00:00');
+                              const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+                              const day = d.getDate();
+                              const month = d.toLocaleDateString('en-US', { month: 'short' });
+                              return `${weekday} ${day}-${month}`;
+                            })()}
+                            {task.eventTime && ` at ${task.eventTime.substring(0, 5)}`}
+                            {!task.eventDate && 'Set event date/time'}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Edit Notes */}
                     {editingTask === task.id && (
@@ -1439,23 +1615,69 @@ export default function TasksColumn() {
                                 </>
                               )}
                             </p>
-                            {/* Event Details */}
-                            {task.isEvent && task.eventDate && (
-                              <p className="text-xs text-blue-600 mt-1">
-                                {(() => {
-                                  const d = new Date(task.eventDate + 'T00:00:00');
-                                  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
-                                  const day = d.getDate();
-                                  const month = d.toLocaleDateString('en-US', { month: 'short' });
-                                  return `${weekday} ${day}-${month}`;
-                                })()}
-                                {task.eventTime && ` at ${task.eventTime.substring(0, 5)}`}
-                              </p>
-                            )}
                             {task.notes && !editingTask && (
                               <p className="text-sm text-gray-500 mt-1">{task.notes}</p>
                             )}
                           </button>
+
+                          {/* Event Details */}
+                          {task.isEvent && (
+                            <div className="mt-1">
+                              {editingEventDetails === task.id ? (
+                                <div className="flex gap-2 items-center flex-wrap">
+                                  <input
+                                    type="date"
+                                    value={editEventDateValue}
+                                    onChange={(e) => setEditEventDateValue(e.target.value)}
+                                    className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                                  />
+                                  <input
+                                    type="time"
+                                    value={editEventTimeValue}
+                                    onChange={(e) => setEditEventTimeValue(e.target.value)}
+                                    placeholder="Time (optional)"
+                                    className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                                  />
+                                  <button
+                                    onClick={() => updateEventDetails(task.id, editEventDateValue, editEventTimeValue)}
+                                    className="text-xs px-2 py-1 bg-primary-yellow hover:bg-primary-yellow-dark rounded"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingEventDetails(null);
+                                      setEditEventDateValue('');
+                                      setEditEventTimeValue('');
+                                    }}
+                                    className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingEventDetails(task.id);
+                                    setEditEventDateValue(task.eventDate || today);
+                                    setEditEventTimeValue(task.eventTime || '');
+                                  }}
+                                  className="text-xs text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                >
+                                  {task.eventDate && (() => {
+                                    const d = new Date(task.eventDate + 'T00:00:00');
+                                    const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+                                    const day = d.getDate();
+                                    const month = d.toLocaleDateString('en-US', { month: 'short' });
+                                    return `${weekday} ${day}-${month}`;
+                                  })()}
+                                  {task.eventTime && ` at ${task.eventTime.substring(0, 5)}`}
+                                  {!task.eventDate && 'Set event date/time'}
+                                </div>
+                              )}
+                            </div>
+                          )}
 
                           {/* Edit Notes */}
                           {editingTask === task.id && (
