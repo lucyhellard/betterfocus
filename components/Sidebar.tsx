@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext';
 import Image from 'next/image';
 
 export default function Sidebar() {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
   const { signOut } = useAuth();

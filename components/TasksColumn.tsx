@@ -1072,9 +1072,11 @@ export default function TasksColumn() {
             )}
 
             {/* Regular Tasks by Date */}
-            {Object.keys(tasksByDate).sort().reverse().map((date) => (
+            {Object.keys(tasksByDate).sort().reverse().map((date) => {
+              const isToday = date === today;
+              return (
               <div key={date}>
-                <h3 className="text-xs font-semibold text-gray-500 mb-2">
+                <h3 className={`text-xs mb-2 ${isToday ? 'font-bold text-primary-yellow-dark' : 'font-semibold text-gray-500'}`}>
                   {(() => {
                     const d = new Date(date + 'T00:00:00');
                     const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
@@ -1082,10 +1084,11 @@ export default function TasksColumn() {
                     const month = d.toLocaleDateString('en-US', { month: 'short' });
                     return `${weekday} ${day}-${month}`;
                   })()}
+                  {isToday && ' (Today)'}
                 </h3>
                 <div className="space-y-2">
                   {tasksByDate[date].map((task) => (
-                    <div key={task.id} className="border border-gray-200 rounded-lg p-2 hover:border-black transition-colors">
+                    <div key={task.id} className={`border rounded-lg p-2 hover:border-black transition-colors ${isToday ? 'border-primary-yellow border-2 bg-primary-yellow-light' : 'border-gray-200'}`}>
                       <div className="flex items-start gap-2">
                         <button
                           onClick={() => cycleTaskStatus(task.id)}
@@ -1300,7 +1303,8 @@ export default function TasksColumn() {
                   ))}
               </div>
             </div>
-          ))}
+              );
+            })}
           </>
             )}
           </div>
@@ -1566,9 +1570,11 @@ export default function TasksColumn() {
           </div>
           {isCompletedExpanded && (
           <div className="space-y-4">
-            {Object.keys(completedCancelledTasksByDate).sort().reverse().map((date) => (
+            {Object.keys(completedCancelledTasksByDate).sort().reverse().map((date) => {
+              const isToday = date === today;
+              return (
               <div key={date}>
-                <h3 className="text-xs font-semibold text-gray-500 mb-2">
+                <h3 className={`text-xs mb-2 ${isToday ? 'font-bold text-primary-yellow-dark' : 'font-semibold text-gray-500'}`}>
                   {(() => {
                     const d = new Date(date + 'T00:00:00');
                     const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
@@ -1576,10 +1582,11 @@ export default function TasksColumn() {
                     const month = d.toLocaleDateString('en-US', { month: 'short' });
                     return `${weekday} ${day}-${month}`;
                   })()}
+                  {isToday && ' (Today)'}
                 </h3>
                 <div className="space-y-2">
                   {completedCancelledTasksByDate[date].map((task) => (
-                    <div key={task.id} className="border border-gray-200 rounded-lg p-2 hover:border-black transition-colors opacity-70">
+                    <div key={task.id} className={`border rounded-lg p-2 hover:border-black transition-colors opacity-70 ${isToday ? 'border-primary-yellow border-2 bg-primary-yellow-light' : 'border-gray-200'}`}>
                       <div className="flex items-start gap-2">
                         <button
                           onClick={() => cycleTaskStatus(task.id)}
@@ -1713,7 +1720,8 @@ export default function TasksColumn() {
                   ))}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
           )}
         </div>
