@@ -128,9 +128,10 @@ export default function TasksColumn() {
   const [eventTime, setEventTime] = useState('');
   const [eventDate, setEventDate] = useState(today);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
-  const [projects, setProjects] = useState<Array<{ id: string; name: string; tag: string; tag_color: string }>>([]);
+  const [projects, setProjects] = useState<Array<{ id: string; title: string; tag: string; tag_color: string }>>([]);
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState('');
+  const [editProjectId, setEditProjectId] = useState<string>('');
   const [editingDueDate, setEditingDueDate] = useState<string | null>(null);
   const [editDueDateValue, setEditDueDateValue] = useState('');
   const [editingEventDetails, setEditingEventDetails] = useState<string | null>(null);
@@ -153,9 +154,10 @@ export default function TasksColumn() {
 
       const { data, error } = await supabase
         .from('projects')
-        .select('id, name, tag, tag_color')
+        .select('id, title, tag, tag_color')
         .eq('user_id', userId)
-        .order('name');
+        .is('completed_at', null)
+        .order('title');
 
       if (error) throw error;
       if (data) {
@@ -591,26 +593,46 @@ export default function TasksColumn() {
   };
 
   const saveNotes = async (taskId: string) => {
+    // Get project details if changed
+    const selectedProject = editProjectId ? projects.find(p => p.id === editProjectId) : undefined;
+
     // Optimistically update UI for both lists
     setTasks((prev) =>
       prev.map((task) =>
-        task.id === taskId ? { ...task, notes: editNotes } : task
+        task.id === taskId ? {
+          ...task,
+          notes: editNotes,
+          projectId: editProjectId || undefined,
+          projectTag: selectedProject?.tag || (editProjectId ? undefined : task.projectTag),
+          projectTagColor: selectedProject?.tag_color || (editProjectId ? undefined : task.projectTagColor),
+        } : task
       )
     );
     setBacklogTasks((prev) =>
       prev.map((task) =>
-        task.id === taskId ? { ...task, notes: editNotes } : task
+        task.id === taskId ? {
+          ...task,
+          notes: editNotes,
+          projectId: editProjectId || undefined,
+          projectTag: selectedProject?.tag || (editProjectId ? undefined : task.projectTag),
+          projectTagColor: selectedProject?.tag_color || (editProjectId ? undefined : task.projectTagColor),
+        } : task
       )
     );
 
     setEditingTask(null);
     const notesToSave = editNotes;
+    const projectIdToSave = editProjectId || null;
     setEditNotes('');
+    setEditProjectId('');
 
     try {
       await supabase
         .from('tasks')
-        .update({ notes: notesToSave || null })
+        .update({
+          notes: notesToSave || null,
+          project_id: projectIdToSave
+        })
         .eq('id', taskId);
     } catch (error) {
       console.error('Error saving notes:', error);
@@ -831,7 +853,7 @@ export default function TasksColumn() {
               <option value="">None</option>
               {projects.map((project) => (
                 <option key={project.id} value={project.id}>
-                  {project.name}
+                  {project.title}
                 </option>
               ))}
             </select>
@@ -926,9 +948,11 @@ export default function TasksColumn() {
                               if (editingTask === task.id) {
                                 setEditingTask(null);
                                 setEditNotes('');
+                                setEditProjectId('');
                               } else {
                                 setEditingTask(task.id);
                                 setEditNotes(task.notes || '');
+                                setEditProjectId(task.projectId || '');
                               }
                             }}
                             className="text-left w-full transition-colors"
@@ -1077,6 +1101,23 @@ export default function TasksColumn() {
                           {/* Edit Notes */}
                           {editingTask === task.id && (
                             <div className="mt-2">
+                              <div className="mb-2">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Project/Goal
+                                </label>
+                                <select
+                                  value={editProjectId}
+                                  onChange={(e) => setEditProjectId(e.target.value)}
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                                >
+                                  <option value="">None</option>
+                                  {projects.map((project) => (
+                                    <option key={project.id} value={project.id}>
+                                      {project.title}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                               <textarea
                                 value={editNotes}
                                 onChange={(e) => setEditNotes(e.target.value)}
@@ -1160,9 +1201,11 @@ export default function TasksColumn() {
                               if (editingTask === task.id) {
                                 setEditingTask(null);
                                 setEditNotes('');
+                                setEditProjectId('');
                               } else {
                                 setEditingTask(task.id);
                                 setEditNotes(task.notes || '');
+                                setEditProjectId(task.projectId || '');
                               }
                             }}
                             className="text-left w-full transition-colors"
@@ -1311,6 +1354,23 @@ export default function TasksColumn() {
                           {/* Edit Notes */}
                           {editingTask === task.id && (
                             <div className="mt-2">
+                              <div className="mb-2">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Project/Goal
+                                </label>
+                                <select
+                                  value={editProjectId}
+                                  onChange={(e) => setEditProjectId(e.target.value)}
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                                >
+                                  <option value="">None</option>
+                                  {projects.map((project) => (
+                                    <option key={project.id} value={project.id}>
+                                      {project.title}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                               <textarea
                                 value={editNotes}
                                 onChange={(e) => setEditNotes(e.target.value)}
@@ -1658,9 +1718,11 @@ export default function TasksColumn() {
                               if (editingTask === task.id) {
                                 setEditingTask(null);
                                 setEditNotes('');
+                                setEditProjectId('');
                               } else {
                                 setEditingTask(task.id);
                                 setEditNotes(task.notes || '');
+                                setEditProjectId(task.projectId || '');
                               }
                             }}
                             className="text-left w-full transition-colors"
@@ -1742,6 +1804,23 @@ export default function TasksColumn() {
                           {/* Edit Notes */}
                           {editingTask === task.id && (
                             <div className="mt-2">
+                              <div className="mb-2">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Project/Goal
+                                </label>
+                                <select
+                                  value={editProjectId}
+                                  onChange={(e) => setEditProjectId(e.target.value)}
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                                >
+                                  <option value="">None</option>
+                                  {projects.map((project) => (
+                                    <option key={project.id} value={project.id}>
+                                      {project.title}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                               <textarea
                                 value={editNotes}
                                 onChange={(e) => setEditNotes(e.target.value)}
