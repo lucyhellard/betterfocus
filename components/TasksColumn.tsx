@@ -127,6 +127,8 @@ export default function TasksColumn() {
   const [isEvent, setIsEvent] = useState(false);
   const [eventTime, setEventTime] = useState('');
   const [eventDate, setEventDate] = useState(today);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [projects, setProjects] = useState<Array<{ id: string; name: string; tag: string; tag_color: string }>>([]);
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState('');
   const [editingDueDate, setEditingDueDate] = useState<string | null>(null);
@@ -141,7 +143,28 @@ export default function TasksColumn() {
 
   useEffect(() => {
     fetchTasks();
+    fetchProjects();
   }, [currentWeek]);
+
+  const fetchProjects = async () => {
+    try {
+      const userId = await getCurrentUserId();
+      if (!userId) return;
+
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name, tag, tag_color')
+        .eq('user_id', userId)
+        .order('name');
+
+      if (error) throw error;
+      if (data) {
+        setProjects(data);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
 
   const moveOldOpenTasksToBacklog = async () => {
     try {
@@ -337,6 +360,10 @@ export default function TasksColumn() {
         is_event: isEvent,
       };
 
+      if (selectedProjectId) {
+        taskData.project_id = selectedProjectId;
+      }
+
       if (isEvent) {
         taskData.event_time = eventTime || null;
         taskData.event_date = eventDate;
@@ -355,6 +382,9 @@ export default function TasksColumn() {
       }
 
       if (data) {
+        // Get project details if a project was selected
+        const selectedProject = selectedProjectId ? projects.find(p => p.id === selectedProjectId) : undefined;
+
         const newTask: Task = {
           id: data.id,
           title: data.title,
@@ -363,6 +393,8 @@ export default function TasksColumn() {
           dueDate: data.due_date || data.date,
           notes: data.notes || undefined,
           projectId: data.project_id || undefined,
+          projectTag: selectedProject?.tag || undefined,
+          projectTagColor: selectedProject?.tag_color || undefined,
           createdAt: data.created_at || undefined,
           isEvent: data.is_event || false,
           eventTime: data.event_time || undefined,
@@ -375,6 +407,7 @@ export default function TasksColumn() {
       setIsEvent(false);
       setEventTime('');
       setEventDate(today);
+      setSelectedProjectId('');
       setShowAddTask(false);
     } catch (error) {
       console.error('Error adding task:', error);
@@ -785,6 +818,25 @@ export default function TasksColumn() {
             autoFocus
           />
 
+          {/* Project/Goal Selector */}
+          <div className="mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Project/Goal (optional)
+            </label>
+            <select
+              value={selectedProjectId}
+              onChange={(e) => setSelectedProjectId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+            >
+              <option value="">None</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Event-specific fields */}
           {isEvent && (
             <div className="mb-2">
@@ -829,6 +881,7 @@ export default function TasksColumn() {
                 setEventTime('');
                 setEventDate(today);
                 setNewTaskTitle('');
+                setSelectedProjectId('');
               }}
               className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
             >
