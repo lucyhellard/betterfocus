@@ -157,10 +157,12 @@ export default function TasksColumn() {
         .select('id, title, tag, tag_color')
         .eq('user_id', userId)
         .is('completed_at', null)
-        .order('title');
+        .order('title')
+        .limit(1000);
 
       if (error) throw error;
       if (data) {
+        console.log(`Fetched ${data.length} active projects`);
         setProjects(data);
       }
     } catch (error) {
