@@ -1607,6 +1607,16 @@ export default function TasksColumn() {
                       </div>
                     )}
 
+                    {/* Detailed Notes Link */}
+                    <Link
+                      href={`/notes?taskId=${task.id}&taskTitle=${encodeURIComponent(task.title)}${task.projectTag ? `&projectTag=${encodeURIComponent(task.projectTag)}` : ''}`}
+                      className="mt-1 text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <DocumentTextIcon className="w-3 h-3" />
+                      View Detailed Notes
+                    </Link>
+
                     {/* Edit Notes */}
                     {editingTask === task.id && (
                       <div className="mt-2">
@@ -1809,6 +1819,16 @@ export default function TasksColumn() {
                               )}
                             </div>
                           )}
+
+                          {/* Detailed Notes Link */}
+                          <Link
+                            href={`/notes?taskId=${task.id}&taskTitle=${encodeURIComponent(task.title)}${task.projectTag ? `&projectTag=${encodeURIComponent(task.projectTag)}` : ''}`}
+                            className="mt-1 text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <DocumentTextIcon className="w-3 h-3" />
+                            View Detailed Notes
+                          </Link>
 
                           {/* Edit Notes */}
                           {editingTask === task.id && (
