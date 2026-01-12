@@ -936,11 +936,7 @@ export default function TasksColumn() {
                           className="hover:opacity-70 transition-opacity flex-shrink-0 mt-0.5"
                           title={task.status}
                         >
-                          {task.isEvent ? (
-                            <CalendarIcon className="w-6 h-6 text-blue-600" />
-                          ) : (
-                            <TaskIcon status={task.status} />
-                          )}
+                          <TaskIcon status={task.status} />
                         </button>
                         <div className="flex-1 min-w-0">
                           <button
@@ -958,6 +954,7 @@ export default function TasksColumn() {
                             className="text-left w-full transition-colors"
                           >
                             <p className={`text-sm font-medium ${task.status === 'completed' ? 'line-through text-gray-400' : ''}`}>
+                              {task.isEvent && <CalendarIcon className="w-4 h-4 inline-block mr-1 text-blue-600" />}
                               {task.title}{' '}
                               {!task.isEvent && <DaysOpenBadge createdAt={task.createdAt} />}
                               {task.projectTag && task.projectTagColor && (
@@ -1189,11 +1186,7 @@ export default function TasksColumn() {
                           className="hover:opacity-70 transition-opacity flex-shrink-0 mt-0.5"
                           title={task.status}
                         >
-                          {task.isEvent ? (
-                            <CalendarIcon className="w-6 h-6 text-blue-600" />
-                          ) : (
-                            <TaskIcon status={task.status} />
-                          )}
+                          <TaskIcon status={task.status} />
                         </button>
                         <div className="flex-1 min-w-0">
                           <button
@@ -1211,6 +1204,7 @@ export default function TasksColumn() {
                             className="text-left w-full transition-colors"
                           >
                             <p className={`text-sm font-medium ${task.status === 'completed' ? 'line-through text-gray-400' : ''}`}>
+                              {task.isEvent && <CalendarIcon className="w-4 h-4 inline-block mr-1 text-blue-600" />}
                               {task.title}{' '}
                               {!task.isEvent && <DaysOpenBadge createdAt={task.createdAt} />}
                               {task.projectTag && task.projectTagColor && (
@@ -1519,11 +1513,7 @@ export default function TasksColumn() {
                     className="hover:opacity-70 transition-opacity flex-shrink-0 mt-0.5"
                     title={task.status}
                   >
-                    {task.isEvent ? (
-                      <CalendarIcon className="w-6 h-6 text-blue-600" />
-                    ) : (
-                      <TaskIcon status={task.status} />
-                    )}
+                    <TaskIcon status={task.status} />
                   </button>
                   <div className="flex-1 min-w-0">
                     <button
@@ -1541,6 +1531,7 @@ export default function TasksColumn() {
                       className="text-left w-full transition-colors"
                     >
                       <p className={`text-sm font-medium ${task.status === 'completed' ? 'line-through text-gray-400' : ''}`}>
+                        {task.isEvent && <CalendarIcon className="w-4 h-4 inline-block mr-1 text-blue-600" />}
                         {task.title}{' '}
                         {!task.isEvent && <DaysOpenBadge createdAt={task.createdAt} />}
                         {task.projectTag && task.projectTagColor && (
@@ -1725,11 +1716,7 @@ export default function TasksColumn() {
                           className="hover:opacity-70 transition-opacity flex-shrink-0 mt-0.5"
                           title={task.status}
                         >
-                          {task.isEvent ? (
-                            <CalendarIcon className="w-6 h-6 text-blue-600" />
-                          ) : (
-                            <TaskIcon status={task.status} />
-                          )}
+                          <TaskIcon status={task.status} />
                         </button>
                         <div className="flex-1 min-w-0">
                           <button
@@ -1747,6 +1734,7 @@ export default function TasksColumn() {
                             className="text-left w-full transition-colors"
                           >
                             <p className="text-sm font-medium">
+                              {task.isEvent && <CalendarIcon className="w-4 h-4 inline-block mr-1 text-blue-600" />}
                               {task.title}{' '}
                               {!task.isEvent && <DaysOpenBadge createdAt={task.createdAt} />}
                               {task.projectTag && task.projectTagColor && (
