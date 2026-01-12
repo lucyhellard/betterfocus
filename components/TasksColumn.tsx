@@ -1170,7 +1170,7 @@ export default function TasksColumn() {
               const isToday = date === today;
               return (
               <div key={date}>
-                <h3 className={`text-xs mb-2 ${isToday ? 'font-bold text-primary-yellow-dark' : 'font-semibold text-gray-500'}`}>
+                <h3 className={`text-xs mb-2 ${isToday ? 'font-bold text-black' : 'font-semibold text-gray-500'}`}>
                   {(() => {
                     const d = new Date(date + 'T00:00:00');
                     const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
@@ -1182,7 +1182,7 @@ export default function TasksColumn() {
                 </h3>
                 <div className="space-y-2">
                   {tasksByDate[date].map((task) => (
-                    <div key={task.id} className={`border rounded-lg p-2 hover:border-black transition-colors ${isToday ? 'border-primary-yellow border-2 bg-primary-yellow-light' : 'border-gray-200'}`}>
+                    <div key={task.id} className={`border rounded-lg p-2 hover:border-black transition-colors ${isToday ? 'border-black border-2 bg-white' : 'border-gray-200'}`}>
                       <div className="flex items-start gap-2">
                         <button
                           onClick={() => cycleTaskStatus(task.id)}
@@ -1531,9 +1531,11 @@ export default function TasksColumn() {
                         if (editingTask === task.id) {
                           setEditingTask(null);
                           setEditNotes('');
+                          setEditProjectId('');
                         } else {
                           setEditingTask(task.id);
                           setEditNotes(task.notes || '');
+                          setEditProjectId(task.projectId || '');
                         }
                       }}
                       className="text-left w-full transition-colors"
@@ -1615,6 +1617,23 @@ export default function TasksColumn() {
                     {/* Edit Notes */}
                     {editingTask === task.id && (
                       <div className="mt-2">
+                        <div className="mb-2">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Project/Goal
+                          </label>
+                          <select
+                            value={editProjectId}
+                            onChange={(e) => setEditProjectId(e.target.value)}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-yellow"
+                          >
+                            <option value="">None</option>
+                            {projects.map((project) => (
+                              <option key={project.id} value={project.id}>
+                                {project.title}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                         <textarea
                           value={editNotes}
                           onChange={(e) => setEditNotes(e.target.value)}
@@ -1687,7 +1706,7 @@ export default function TasksColumn() {
               const isToday = date === today;
               return (
               <div key={date}>
-                <h3 className={`text-xs mb-2 ${isToday ? 'font-bold text-primary-yellow-dark' : 'font-semibold text-gray-500'}`}>
+                <h3 className={`text-xs mb-2 ${isToday ? 'font-bold text-black' : 'font-semibold text-gray-500'}`}>
                   {(() => {
                     const d = new Date(date + 'T00:00:00');
                     const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
@@ -1699,7 +1718,7 @@ export default function TasksColumn() {
                 </h3>
                 <div className="space-y-2">
                   {completedCancelledTasksByDate[date].map((task) => (
-                    <div key={task.id} className={`border rounded-lg p-2 hover:border-black transition-colors opacity-70 ${isToday ? 'border-primary-yellow border-2 bg-primary-yellow-light' : 'border-gray-200'}`}>
+                    <div key={task.id} className={`border rounded-lg p-2 hover:border-black transition-colors opacity-70 ${isToday ? 'border-black border-2 bg-white' : 'border-gray-200'}`}>
                       <div className="flex items-start gap-2">
                         <button
                           onClick={() => cycleTaskStatus(task.id)}
