@@ -163,7 +163,7 @@ export default function TasksColumn() {
 
       if (error) throw error;
       if (data) {
-        console.log(`Fetched ${data.length} active projects`);
+        console.log(`✅ TasksColumn: Fetched ${data.length} active projects for dropdown`);
         setProjects(data);
       }
     } catch (error) {
