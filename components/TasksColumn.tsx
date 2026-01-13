@@ -940,7 +940,7 @@ export default function TasksColumn() {
                 <h3 className="text-xs font-bold text-red-600 mb-2">Priority</h3>
                 <div className="space-y-2">
                   {priorityTasks.map((task) => (
-                    <div key={task.id} className="border-2 border-red-500 rounded-lg p-2 hover:border-red-600 transition-colors bg-red-50">
+                    <div key={task.id} className="border border-red-500 rounded-lg p-2 hover:border-red-600 transition-colors bg-red-50">
                       <div className="flex items-start gap-2">
                         <button
                           onClick={() => cycleTaskStatus(task.id)}
@@ -1196,7 +1196,7 @@ export default function TasksColumn() {
                 </h3>
                 <div className="space-y-2">
                   {tasksByDate[date].map((task) => (
-                    <div key={task.id} className={`border rounded-lg p-2 hover:border-black transition-colors ${isToday ? 'border-black border-2 bg-white' : 'border-gray-200'}`}>
+                    <div key={task.id} className={`border rounded-lg p-2 hover:border-black transition-colors ${isToday ? 'border-black bg-white' : 'border-gray-200'}`}>
                       <div className="flex items-start gap-2">
                         <button
                           onClick={() => cycleTaskStatus(task.id)}
@@ -1736,7 +1736,7 @@ export default function TasksColumn() {
                 </h3>
                 <div className="space-y-2">
                   {completedCancelledTasksByDate[date].map((task) => (
-                    <div key={task.id} className={`border rounded-lg p-2 hover:border-black transition-colors opacity-70 ${isToday ? 'border-black border-2 bg-white' : 'border-gray-200'}`}>
+                    <div key={task.id} className={`border rounded-lg p-2 hover:border-black transition-colors opacity-70 ${isToday ? 'border-black bg-white' : 'border-gray-200'}`}>
                       <div className="flex items-start gap-2">
                         <button
                           onClick={() => cycleTaskStatus(task.id)}
