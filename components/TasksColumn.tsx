@@ -153,20 +153,9 @@ export default function TasksColumn() {
       const userId = await getCurrentUserId();
       if (!userId) return;
 
-      console.log('🔍 Fetching projects for userId:', userId);
-
-      // First, let's check how many total projects exist
-      const { count: totalCount } = await supabase
-        .from('projects')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
-
-      console.log(`📊 Total projects for user: ${totalCount}`);
-
-      // Now get active projects
       const { data, error } = await supabase
         .from('projects')
-        .select('id, title, tag, tag_color, completed_at')
+        .select('id, title, tag, tag_color')
         .eq('user_id', userId)
         .is('completed_at', null)
         .order('title')
@@ -174,8 +163,6 @@ export default function TasksColumn() {
 
       if (error) throw error;
       if (data) {
-        console.log(`✅ TasksColumn: Fetched ${data.length} active projects (completed_at IS NULL)`);
-        console.log('Project titles:', data.map(p => p.title));
         setProjects(data);
       }
     } catch (error) {
