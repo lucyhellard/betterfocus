@@ -128,6 +128,7 @@ export default function TasksColumn() {
   const [eventTime, setEventTime] = useState('');
   const [eventDate, setEventDate] = useState(today);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [projects, setProjects] = useState<Array<{ id: string; title: string; tag: string; tag_color: string }>>([]);
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editNotes, setEditNotes] = useState('');
@@ -347,11 +348,14 @@ export default function TasksColumn() {
 
   const addTask = async () => {
     if (!newTaskTitle.trim()) return;
+    if (isSubmitting) return; // Prevent double submission
 
     try {
+      setIsSubmitting(true);
       const userId = await getCurrentUserId();
       if (!userId) {
         console.error('No user logged in');
+        setIsSubmitting(false);
         return;
       }
 
@@ -382,6 +386,7 @@ export default function TasksColumn() {
       if (error) {
         console.error('Database error:', error);
         alert(`Error adding task: ${error.message || 'Unknown error'}\n\nMake sure you've run the database migration (supabase-migration-events.sql)`);
+        setIsSubmitting(false);
         throw error;
       }
 
@@ -413,8 +418,10 @@ export default function TasksColumn() {
       setEventDate(today);
       setSelectedProjectId('');
       setShowAddTask(false);
+      setIsSubmitting(false);
     } catch (error) {
       console.error('Error adding task:', error);
+      setIsSubmitting(false);
     }
   };
 
@@ -894,9 +901,10 @@ export default function TasksColumn() {
           <div className="flex gap-2">
             <button
               onClick={addTask}
-              className="px-4 py-2 bg-primary-yellow hover:bg-primary-yellow-dark rounded-lg transition-colors"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-primary-yellow hover:bg-primary-yellow-dark rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Add
+              {isSubmitting ? 'Adding...' : 'Add'}
             </button>
             <button
               onClick={() => {
@@ -907,7 +915,8 @@ export default function TasksColumn() {
                 setNewTaskTitle('');
                 setSelectedProjectId('');
               }}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -1186,12 +1195,7 @@ export default function TasksColumn() {
                   {isToday && ' (Today)'}
                 </h3>
                 <div className="space-y-2">
-                  {tasksByDate[date].map((task) => {
-                    // Debug: Log task details to help identify duplicates
-                    if (task.title.includes('Alex') || task.title.includes('Extension')) {
-                      console.log(`Task: ${task.title} | ID: ${task.id} | Date: ${task.date} | DueDate: ${task.dueDate}`);
-                    }
-                    return (
+                  {tasksByDate[date].map((task) => (
                     <div key={task.id} className={`border rounded-lg p-2 hover:border-black transition-colors ${isToday ? 'border-black border-2 bg-white' : 'border-gray-200'}`}>
                       <div className="flex items-start gap-2">
                         <button
@@ -1420,8 +1424,7 @@ export default function TasksColumn() {
                         </div>
                       </div>
                     </div>
-                    );
-                  })}
+                  ))}
               </div>
             </div>
               );
