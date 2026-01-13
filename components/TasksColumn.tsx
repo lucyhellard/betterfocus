@@ -158,7 +158,7 @@ export default function TasksColumn() {
         .select('id, title, tag, tag_color')
         .eq('user_id', userId)
         .is('completed_at', null)
-        .order('title')
+        .order('tag')
         .limit(1000);
 
       if (error) throw error;
@@ -861,7 +861,7 @@ export default function TasksColumn() {
               <option value="">None</option>
               {projects.map((project) => (
                 <option key={project.id} value={project.id}>
-                  {project.title}
+                  {project.tag} - {project.title}
                 </option>
               ))}
             </select>
@@ -1120,7 +1120,7 @@ export default function TasksColumn() {
                                   <option value="">None</option>
                                   {projects.map((project) => (
                                     <option key={project.id} value={project.id}>
-                                      {project.title}
+                                      {project.tag} - {project.title}
                                     </option>
                                   ))}
                                 </select>
@@ -1376,7 +1376,7 @@ export default function TasksColumn() {
                                   <option value="">None</option>
                                   {projects.map((project) => (
                                     <option key={project.id} value={project.id}>
-                                      {project.title}
+                                      {project.tag} - {project.title}
                                     </option>
                                   ))}
                                 </select>
@@ -1646,7 +1646,7 @@ export default function TasksColumn() {
                             <option value="">None</option>
                             {projects.map((project) => (
                               <option key={project.id} value={project.id}>
-                                {project.title}
+                                {project.tag} - {project.title}
                               </option>
                             ))}
                           </select>
@@ -1859,7 +1859,7 @@ export default function TasksColumn() {
                                   <option value="">None</option>
                                   {projects.map((project) => (
                                     <option key={project.id} value={project.id}>
-                                      {project.title}
+                                      {project.tag} - {project.title}
                                     </option>
                                   ))}
                                 </select>
