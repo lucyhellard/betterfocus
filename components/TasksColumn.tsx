@@ -1165,7 +1165,13 @@ export default function TasksColumn() {
             )}
 
             {/* Regular Tasks by Date */}
-            {Object.keys(tasksByDate).sort().reverse().map((date) => {
+            {Object.keys(tasksByDate).sort((a, b) => {
+              // Today's tasks come first
+              if (a === today) return -1;
+              if (b === today) return 1;
+              // Then sort remaining dates in descending order (most recent first)
+              return b.localeCompare(a);
+            }).map((date) => {
               const isToday = date === today;
               return (
               <div key={date}>
