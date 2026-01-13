@@ -1186,7 +1186,12 @@ export default function TasksColumn() {
                   {isToday && ' (Today)'}
                 </h3>
                 <div className="space-y-2">
-                  {tasksByDate[date].map((task) => (
+                  {tasksByDate[date].map((task) => {
+                    // Debug: Log task details to help identify duplicates
+                    if (task.title.includes('Alex') || task.title.includes('Extension')) {
+                      console.log(`Task: ${task.title} | ID: ${task.id} | Date: ${task.date} | DueDate: ${task.dueDate}`);
+                    }
+                    return (
                     <div key={task.id} className={`border rounded-lg p-2 hover:border-black transition-colors ${isToday ? 'border-black border-2 bg-white' : 'border-gray-200'}`}>
                       <div className="flex items-start gap-2">
                         <button
@@ -1415,7 +1420,8 @@ export default function TasksColumn() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
               </div>
             </div>
               );
